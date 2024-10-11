@@ -42,10 +42,10 @@ r+=1
 
 # Enter the root path
 path = tk.Label(window,text="Votre dossier : ",font=("Helvetica", 10))
-path.grid(column=0,row=r, pady=50, padx=30, sticky='w',columnspan=3)
+path.grid(column=0,row=r, pady=40, padx=30, sticky='w',columnspan=3)
 
 pathEntry = tk.Entry(window, width=90)
-pathEntry.grid(column=0, row=r, pady=50, padx=125, columnspan=6, sticky='w')
+pathEntry.grid(column=0, row=r, pady=40, padx=125, columnspan=6, sticky='w')
 
 def browse():
     directory=fd.askdirectory()
@@ -53,7 +53,7 @@ def browse():
     pathEntry.insert(0,directory)
 
 browseButton = tk.Button(window,text='Mes dossiers',command=browse,bg='lightblue')
-browseButton.grid(column=4,columnspan=6,padx=50,row=r,pady=50, sticky='w')
+browseButton.grid(column=4,columnspan=6,padx=40,row=r,pady=40, sticky='w')
 r+=1
 
 # Enter the start and end 
@@ -76,9 +76,9 @@ def showCalendar() :
     
     if useDate.get() : 
         date1.grid(column=0,row=8,pady=5,sticky='w',padx=53,columnspan=2)
-        startcal.grid(column=1, row=8, pady=5, sticky='w')
+        startcal.grid(column=0, row=8, pady=5, columnspan=3, padx=163, sticky='w')
         date2.grid(column=2,row=8,pady=5, padx=5,sticky='w')
-        endcal.grid(column=2, columnspan=2, padx=115, row=8, pady=5,sticky='w')
+        endcal.grid(column=2, columnspan=3, padx=105, row=8, pady=5,sticky='w')
     
     else :
         date1.grid_forget()
@@ -139,7 +139,7 @@ stepsD = tk.Checkbutton(window, text='Pas par jour',
 stepsD.select()
 stepsD.grid(column=0, row=r, pady=5,padx=35,sticky='w')
 
-stepsM = tk.Checkbutton(window, text='Pas par minute',
+stepsM = tk.Checkbutton(window, text='Pas',
                        variable=useStepsM, onvalue=True, offvalue=False)
 stepsM.select()
 stepsM.grid(column=1, row=r, pady=5, sticky='w')
@@ -149,14 +149,14 @@ caloriesD = tk.Checkbutton(window, text='Calories par jour',
                           variable=useCalD, onvalue=True, offvalue=False)
 caloriesD.grid(column=2, row=r, pady=5,sticky='w')
 
-caloriesM = tk.Checkbutton(window, text='Calories par minute',
+caloriesM = tk.Checkbutton(window, text='Calories',
                           variable=useCalM, onvalue=True, offvalue=False)
 caloriesM.grid(column=3, row=r, pady=5,sticky='w')
 
 r+=1
 
-heart = tk.Checkbutton(window, text='BPM moyen, min et max',
-                       variable=useBpm, onvalue=True, offvalue=False)
+heart = tk.Checkbutton(window, text='BPM résumé',
+                      variable=useBpm, onvalue=True, offvalue=False)
 heart.grid(column=0, row=r, pady=5,padx=35,sticky='w')
 
 resting = tk.Checkbutton(window, text='BPM au repos',
@@ -172,7 +172,7 @@ r+=1
 
 cutDays=tk.BooleanVar()
 
-watchWorn = tk.Checkbutton(window,text="Retirer les jours où la montre n'est pas portée",
+watchWorn = tk.Checkbutton(window,text="Retirer les moments où la montre n'est pas portée",
                            variable=cutDays, onvalue=True, offvalue=False)
 watchWorn.grid(column=0,row=r, pady=5, padx=35, sticky='w', columnspan=6)
 
@@ -193,24 +193,24 @@ def openNewWindow():
 
 def defineKeywords():
     
-    keywords = {}
+    keywords = []
     
     if useSed.get():
-        keywords['sedentary'] = 'D'
+        keywords.append('sedentary')
     if useLight.get():
-        keywords['lightly'] = 'D'
+        keywords.append('lightly')
     if useMod.get():
-        keywords['moderately'] = 'D'
+        keywords.append('moderately')
     if useVery.get():
-        keywords['very'] = 'D'    
+        keywords.append('very') 
     if useStepsD.get():
-        keywords['steps'] = 'D'
+        keywords.append('stepsD')
     if useStepsM.get():
-        keywords['steps'] = 'M'
+        keywords.append('stepsM')
     if useCalD.get():
-        keywords['calories'] = 'D'
+        keywords.append('caloriesD')
     if useCalM.get():
-        keywords['calories'] = 'M'
+        keywords.append('caloriesM')
     if useBpm.get():
         keywords.append('heart_rate')
     if useRest.get():
@@ -289,6 +289,6 @@ button.grid(column=0,row=r,columnspan=6,pady=20)
 r+=1
 
 credit = tk.Label(window,text='Application développée par Marianne Fortier',font=("Helvetica", 8, "italic"))
-credit.grid(column=3,row=r,columnspan=5, pady=15, padx=10, sticky='e')
+credit.grid(column=3,row=r,columnspan=5, padx=10, sticky='e')
 
 window.mainloop()
