@@ -16,13 +16,16 @@ import time
 from tkcalendar import Calendar,DateEntry
 import os
 
+import warnings
+warnings.filterwarnings('ignore') 
+
 basedir = os.path.dirname(__file__)
 
 # Create the window
 window = tk.Tk()
 window.title("Fitbit Data Wizard")
-window.geometry("800x600")
-window.iconbitmap(os.path.join(basedir, "wizard_emoji.ico"))
+window.geometry("800x500")
+window.iconbitmap(os.path.join(basedir, "../other/wizard_emoji.ico"))
 
 r=0
 
@@ -42,10 +45,10 @@ r+=1
 
 # Enter the root path
 path = tk.Label(window,text="Votre dossier : ",font=("Helvetica", 10))
-path.grid(column=0,row=r, pady=50, padx=30, sticky='w',columnspan=3)
+path.grid(column=0,row=r, pady=40, padx=30, sticky='w',columnspan=3)
 
-pathEntry = tk.Entry(window, width=90)
-pathEntry.grid(column=0, row=r, pady=50, padx=125, columnspan=6, sticky='w')
+pathEntry = tk.Entry(window, width=70)
+pathEntry.grid(column=0, row=r, pady=40, padx=125, columnspan=6, sticky='w')
 
 def browse():
     directory=fd.askdirectory()
@@ -53,7 +56,7 @@ def browse():
     pathEntry.insert(0,directory)
 
 browseButton = tk.Button(window,text='Mes dossiers',command=browse,bg='lightblue')
-browseButton.grid(column=4,columnspan=6,padx=50,row=r,pady=50, sticky='w')
+browseButton.grid(column=4,columnspan=6,padx=40,row=r,pady=40, sticky='w')
 r+=1
 
 # Enter the start and end 
@@ -61,120 +64,63 @@ option = tk.Label(window, text='Options :',font=("Helvetica", 10))
 option.grid(column=0, row=r, pady=5, padx=30, sticky='w')
 r+=1
 
-date=tk.Label(window,text='Dates :')
-date.grid(column=0, row=r, pady=5, padx=35, sticky='w')
-
-r+=1
-
-useDate = tk.BooleanVar()
 date1 = tk.Label(window,text='Date de début : ')
 startcal = DateEntry(window, width=12, year=2024)
+timetxt1 = tk.Label(window,text="HH:MM")
+hourstart = tk.Entry(window,width=3)
+twodots1 = tk.Label(window,text=':')
+minstart = tk.Entry(window,width=3)
+
 date2 = tk.Label(window,text='Date de fin : ')
 endcal = DateEntry(window, width=12, year=2024)
+timetxt2 = tk.Label(window,text="HH:MM")
+hourend = tk.Entry(window,width=3)
+twodots2 = tk.Label(window,text=':')
+minend = tk.Entry(window,width=3)
 
-def showCalendar() :
+def showCalendar(r) :
     
-    if useDate.get() : 
-        date1.grid(column=0,row=8,pady=5,sticky='w',padx=53,columnspan=2)
-        startcal.grid(column=1, row=8, pady=5, sticky='w')
-        date2.grid(column=2,row=8,pady=5, padx=5,sticky='w')
-        endcal.grid(column=2, columnspan=2, padx=115, row=8, pady=5,sticky='w')
-    
-    else :
-        date1.grid_forget()
-        startcal.grid_forget()
-        date2.grid_forget()
-        endcal.grid_forget()
+    date1.grid(column=0,row=r,pady=5,sticky='w',padx=35,columnspan=3)
+    startcal.grid(column=0, row=r, pady=5, columnspan=3, padx=122, sticky='w')
+    timetxt1.grid(column=1,row=r,pady=5,columnspan=2,sticky='w')
+    hourstart.grid(column=1,row=r,padx=55,columnspan=3,sticky='w')
+    twodots1.grid(column=1,row=r,padx=80,columnspan=2,sticky='w')
+    minstart.grid(column=1,row=r,padx=93,columnspan=3,sticky='w')
+        
+    date2.grid(column=0,row=r+1,pady=5,padx=35,sticky='w',columnspan=3)
+    endcal.grid(column=0, columnspan=3, padx=122, row=r+1, pady=5,sticky='w')
+    timetxt2.grid(column=1,row=r+1,pady=5,columnspan=2,sticky='w')
+    hourend.grid(column=1,row=r+1,padx=55,columnspan=3,sticky='w')
+    twodots2.grid(column=1,row=r+1,padx=80,columnspan=2,sticky='w')
+    minend.grid(column=1,row=r+1,padx=93,columnspan=3,sticky='w')
 
-
-check1 = tk.Checkbutton(window, text='Exporter toutes les dates des fichiers',
-                        variable=useDate, onvalue=False, offvalue=True, command=showCalendar)
-check1.select()
-check1.grid(column=0, row=r, pady=5, columnspan=6,sticky='w',padx=32)
-
-r+=4
+showCalendar(r)
+r+=5
 
 # Les métriques
-
-useSed = tk.BooleanVar() 
-useLight = tk.BooleanVar() 
-useMod = tk.BooleanVar()
-useVery = tk.BooleanVar()
-
-useStepsD = tk.BooleanVar()
-useStepsM = tk.BooleanVar()
-useCalD = tk.BooleanVar()
-useCalM = tk.BooleanVar()
-useBpm = tk.BooleanVar()
-useRest = tk.BooleanVar()
+useSteps = tk.BooleanVar()
+useActive = tk.BooleanVar()
 
 metrics = tk.Label(window, text='Métriques :')
 metrics.grid(column=0, row=r, pady=5,padx=35, sticky='w')
 r+=1
 
-sedentary = tk.Checkbutton(window, text='Min. sédendaires',
-                           variable=useSed, onvalue=True, offvalue=False)
-sedentary.select()
-sedentary.grid(column=0, row=r, pady=5, padx=35,sticky='w')
+active = tk.Checkbutton(window, text='Zones actives',
+                      variable=useActive, onvalue=True, offvalue=False)
+active.select()
+active.grid(column=0, row=r, pady=5,padx=35,sticky='w')
 
-lightly = tk.Checkbutton(window, text='Min. peu actives',
-                         variable=useLight, onvalue=True, offvalue=False)
-lightly.select()
-lightly.grid(column=1, row=r, pady=5, sticky='w')
-
-moderately = tk.Checkbutton(window, text='Min. actives',
-                            variable=useMod, onvalue=True, offvalue=False)
-moderately.select()
-moderately.grid(column=2, row=r, pady=5,sticky='w')
-
-very = tk.Checkbutton(window, text='Min. très actives',
-                      variable=useVery, onvalue=True, offvalue=False)
-very.select()
-very.grid(column=3, row=r, pady=5,sticky='w')
+steps = tk.Checkbutton(window, text='Pas',
+                       variable=useSteps, onvalue=True, offvalue=False)
+steps.select()
+steps.grid(column=1, row=r, pady=5, sticky='w')
 
 r+=1
 
-stepsD = tk.Checkbutton(window, text='Pas par jour',
-                       variable=useStepsD, onvalue=True, offvalue=False)
-stepsD.select()
-stepsD.grid(column=0, row=r, pady=5,padx=35,sticky='w')
-
-stepsM = tk.Checkbutton(window, text='Pas par minute',
-                       variable=useStepsM, onvalue=True, offvalue=False)
-stepsM.select()
-stepsM.grid(column=1, row=r, pady=5, sticky='w')
-
-
-caloriesD = tk.Checkbutton(window, text='Calories par jour',
-                          variable=useCalD, onvalue=True, offvalue=False)
-caloriesD.grid(column=2, row=r, pady=5,sticky='w')
-
-caloriesM = tk.Checkbutton(window, text='Calories par minute',
-                          variable=useCalM, onvalue=True, offvalue=False)
-caloriesM.grid(column=3, row=r, pady=5,sticky='w')
-
-r+=1
-
-heart = tk.Checkbutton(window, text='BPM moyen, min et max',
-                       variable=useBpm, onvalue=True, offvalue=False)
-heart.grid(column=0, row=r, pady=5,padx=35,sticky='w')
-
-resting = tk.Checkbutton(window, text='BPM au repos',
-                         variable=useRest, onvalue=True, offvalue=False)
-resting.grid(column=1, row=r, pady=5,sticky='w')
-
-r+=1
-
-autre = tk.Label(window,text='Autre :')
-autre.grid(column=0,row=r, pady=5, padx=35, sticky='w')
-
-r+=1
-
-cutDays=tk.BooleanVar()
-
-watchWorn = tk.Checkbutton(window,text="Retirer les jours où la montre n'est pas portée",
-                           variable=cutDays, onvalue=True, offvalue=False)
-watchWorn.grid(column=0,row=r, pady=5, padx=35, sticky='w', columnspan=6)
+birth = tk.Label(window,text='Année de naissance :')
+birth.grid(column=0,row=r, pady=5, padx=35, sticky='w',columnspan=3)
+yr_birth = tk.Entry(window,width=10)
+yr_birth.grid(column=0,row=r,pady=5,padx=152,sticky='w',columnspan=3)
 
 r+=1
 
@@ -182,7 +128,7 @@ def openNewWindow():
     newWindow = tk.Toplevel(window)
     newWindow.title("Fitbit Data Wizard")
     newWindow.geometry("500x250")
-    newWindow.iconbitmap(os.path.join(basedir, "wizard_emoji.ico"))
+    newWindow.iconbitmap(os.path.join(basedir, "../other/wizard_emoji.ico"))
     
     label = tk.Label(newWindow, 
                      text="Progression :", 
@@ -193,32 +139,15 @@ def openNewWindow():
 
 def defineKeywords():
     
-    keywords = {}
+    keywords = []
     
-    if useSed.get():
-        keywords['sedentary'] = 'D'
-    if useLight.get():
-        keywords['lightly'] = 'D'
-    if useMod.get():
-        keywords['moderately'] = 'D'
-    if useVery.get():
-        keywords['very'] = 'D'    
-    if useStepsD.get():
-        keywords['steps'] = 'D'
-    if useStepsM.get():
-        keywords['steps'] = 'M'
-    if useCalD.get():
-        keywords['calories'] = 'D'
-    if useCalM.get():
-        keywords['calories'] = 'M'
-    if useBpm.get():
+    if useActive.get():
         keywords.append('heart_rate')
-    if useRest.get():
-        keywords.append('resting')      
+    if useSteps.get():
+        keywords.append('steps')     
         
     return(keywords)
     
-
 def useInput():
     
     newWindow = openNewWindow()
@@ -236,28 +165,35 @@ def useInput():
     
     startDate = startcal.get()
     endDate = endcal.get()
+
+    startTime = str(hourstart.get())+':'+str(minstart.get())
+    endTime = str(hourend.get())+':'+str(minend.get())
+    
+    birth_year = yr_birth.get()
     
     keywords = defineKeywords()
     
     # Afficher les options dans la boite de texte
-    
     for w in watch_list:
-        if useDate.get() :
-            verif = export_data(root_path,w,startDate=startDate,endDate=endDate,keyword=keywords,cut=cutDays.get())
-        else : verif = export_data(root_path,w,keyword=keywords,cut=cutDays.get())
-        
-        
-        if len(verif) == 2:
+        print(w)
+        verif = export_data(root_path,w,startDate+' '+startTime,endDate+' '+endTime,birth_year,keyword=keywords)        
+        print(verif)
+        if verif[0] == 'Error':
             break
+        elif verif[0] == 'No data':
+            message = "-------------------------------------------------------------------\n" + "{w} n'a aucune donnée pour les dates entrées.\n".format(w=w) + "-------------------------------------------------------------------\n"
+            progress.insert(tk.END, message)
+            progress.see("end")
+            progress.update()
         else:
-            message = "---------------------------------------------------------\n" + "L'extraction de {w} est terminée.\n".format(w=w) + "---------------------------------------------------------\n"
+            message = "-------------------------------------------------------------------\n" + "L'extraction de {w} est terminée.\n".format(w=w) + "-------------------------------------------------------------------\n"
             progress.insert(tk.END, message)
             progress.see("end")
             progress.update()
     
     end = time.time()
     
-    if len(verif) == 2:
+    if verif[0] == 'Error':
         progress.insert(tk.END,"\nERREUR!",'error')
         progress.tag_config('error', foreground='red')
         message = "\nUne erreur est survenue. Assurez-vous d'avoir bien entré vos paramètres avant de relancer le programme et de regarder la vidéo explicative.\nSi l'erreur persiste, veuillez envoyer à Marianne Fortier vos fichiers,\nles paramètres entrés et copier-coller le texte d'erreur plus bas au\nmarianne.fortier@gmail.com."
@@ -284,11 +220,11 @@ def useInput():
     
     
 button = tk.Button(window,text="Commencer la magie ✨",command=useInput,bg="lightblue")
-button.grid(column=0,row=r,columnspan=6,pady=20)
+button.grid(column=0,row=r,columnspan=6,pady=30)
 
 r+=1
 
 credit = tk.Label(window,text='Application développée par Marianne Fortier',font=("Helvetica", 8, "italic"))
-credit.grid(column=3,row=r,columnspan=5, pady=15, padx=10, sticky='e')
+credit.grid(column=3,row=r,columnspan=5, padx=10, pady=25, sticky='e')
 
 window.mainloop()
