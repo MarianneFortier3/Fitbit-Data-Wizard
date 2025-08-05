@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-Created on Tue Jan 16 12:55:04 2024
+Created on Jan 16 2024
+Updated on Aug 5 2025
 
-@author: Marianne
+@author: Marianne Fortier
+@email: marianne.fortier@gmail.com
 """
 
 import sys
@@ -19,9 +21,11 @@ import os
 import warnings
 warnings.filterwarnings('ignore') 
 
+# Répertoire avec les fichiers de l'app
 basedir = os.path.dirname(__file__)
+# basedir = os.path.dirname(__file__) + '/../other/'
 
-# Create the window
+# Créer la fenêtre de l'application
 window = tk.Tk()
 window.title("Fitbit Data Wizard")
 window.geometry("800x500")
@@ -29,7 +33,7 @@ window.iconbitmap(os.path.join(basedir, "wizard_emoji.ico"))
 
 r=0
 
-# Add title and instructions
+# Ajouter le titre et les instruction
 title = tk.Label(window,text = "Bienvenue sur Fitbit Data Wizard ! 🪄",
                  font=("Helvetica", 16))
 title.grid(column=0,row=r,columnspan=10,padx=225)
@@ -43,13 +47,14 @@ inst1.grid(column=0,row=r,columnspan=10)
 
 r+=1
 
-# Enter the root path
+# Champ pour entrer le répertoire des montres
 path = tk.Label(window,text="Votre dossier : ",font=("Helvetica", 10))
 path.grid(column=0,row=r, pady=40, padx=30, sticky='w',columnspan=3)
 
 pathEntry = tk.Entry(window, width=70)
 pathEntry.grid(column=0, row=r, pady=40, padx=125, columnspan=6, sticky='w')
 
+# Permet de chercher son dossier
 def browse():
     directory=fd.askdirectory()
     pathEntry.delete(0,tk.END)
@@ -59,7 +64,7 @@ browseButton = tk.Button(window,text='Mes dossiers',command=browse,bg='lightblue
 browseButton.grid(column=4,columnspan=6,padx=40,row=r,pady=40, sticky='w')
 r+=1
 
-# Enter the start and end 
+# Champs pour entrer la date de début et de fin
 option = tk.Label(window, text='Options :',font=("Helvetica", 10))
 option.grid(column=0, row=r, pady=5, padx=30, sticky='w')
 r+=1
@@ -78,6 +83,7 @@ hourend = tk.Entry(window,width=3)
 twodots2 = tk.Label(window,text=':')
 minend = tk.Entry(window,width=3)
 
+# Ajouter un calendrier pour choisir la date
 def showCalendar(r) :
     
     date1.grid(column=0,row=r,pady=5,sticky='w',padx=35,columnspan=3)
@@ -97,7 +103,7 @@ def showCalendar(r) :
 showCalendar(r)
 r+=5
 
-# Les métriques
+# Les métriques à extraire
 useSteps = tk.BooleanVar()
 useActive = tk.BooleanVar()
 
@@ -117,6 +123,7 @@ steps.grid(column=1, row=r, pady=5, sticky='w')
 
 r+=1
 
+# Entrer la date de naissance des élèves qui ont porté les montres
 birth = tk.Label(window,text='Année de naissance :')
 birth.grid(column=0,row=r, pady=5, padx=35, sticky='w',columnspan=3)
 yr_birth = tk.Entry(window,width=10)
@@ -124,6 +131,7 @@ yr_birth.grid(column=0,row=r,pady=5,padx=152,sticky='w',columnspan=3)
 
 r+=1
 
+# Ouvrir la fenêtre de progrès
 def openNewWindow():
     newWindow = tk.Toplevel(window)
     newWindow.title("Fitbit Data Wizard")
@@ -137,6 +145,7 @@ def openNewWindow():
     
     return(newWindow)
 
+# Selon la case cochée, attribuer le bon mot-clé pour lire le fichier
 def defineKeywords():
     
     keywords = []
@@ -147,22 +156,27 @@ def defineKeywords():
         keywords.append('steps')     
         
     return(keywords)
-    
+
+# Sauvegarder les entrées de l'utilisateur et faire l'extraction   
 def useInput():
     
+    # Fenêtre de progrès
     newWindow = openNewWindow()
     
     start = time.time()
     
+    # Trouver les montres
     root_path = pathEntry.get()
     watch_list = list_all_watch(root_path)
     
+    # Boite de texte pour le progrès de l'extraction
     progress = st.ScrolledText(newWindow,    
                                       width = 60,  
                                       height = 10,  
                                       font = ("Helvetica", 10)) 
     progress.pack(padx=10,pady=10)
     
+    # Sauvegarder les dates, année de naissance et mots-clés
     startDate = startcal.get()
     endDate = endcal.get()
 
@@ -173,7 +187,8 @@ def useInput():
     
     keywords = defineKeywords()
     
-    # Afficher les options dans la boite de texte
+    # Extraire les données une montre à la fois
+    # et afficher un texte de progrès ou d'erreur selon le résultat de l'extraction
     for w in watch_list:
         print(w)
         verif = export_data(root_path,w,startDate+' '+startTime,endDate+' '+endTime,birth_year,keywords=keywords)        
@@ -193,6 +208,7 @@ def useInput():
     
     end = time.time()
     
+    # Message de succès ou d'erreur
     if verif[0] == 'Error':
         progress.insert(tk.END,"\nERREUR!",'error')
         progress.tag_config('error', foreground='red')
@@ -210,6 +226,7 @@ def useInput():
 
     progress.configure(state ='disabled')
     
+    # Bouton confirmant la lecture du message et fermant la fenêtre
     finishButton = tk.Button(newWindow,
                        text="OK",
                        command=newWindow.destroy,
@@ -218,13 +235,15 @@ def useInput():
                        font=("Helvetica", 8))
     finishButton.pack(pady=5,anchor='n')
     
-    
+# Boutton pour partir l'extraction    
 button = tk.Button(window,text="Commencer la magie ✨",command=useInput,bg="lightblue")
 button.grid(column=0,row=r,columnspan=6,pady=30)
 
 r+=1
 
+# Texte de crédit
 credit = tk.Label(window,text='Application développée par Marianne Fortier',font=("Helvetica", 8, "italic"))
 credit.grid(column=3,row=r,columnspan=5, padx=10, pady=25, sticky='e')
 
+# Partir l'application
 window.mainloop()

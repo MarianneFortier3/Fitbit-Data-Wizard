@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-Created on Sun Dec 31 14:06:35 2023
+Created on Jan 16 2024
+Updated on Aug 5 2025
 
-@author: Marianne
+@author: Marianne Fortier
+@email: marianne.fortier@gmail.com
 """
 
 # Fonctions pour extraire les données des montres
@@ -17,9 +19,10 @@ from datetime import datetime, timedelta
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
-# Find the files starting with the keyword
+# Trouver les fichiers à extraire selon un mot-clé et les dates recherchées
 def find_json_files(file_list, keyword, dates):
     matched_files = []
+    # Pour toutes les dates, trouve les fichiers commençant par le mot-clé et la date
     for d in dates:
         try:
             for f in file_list:
@@ -27,18 +30,20 @@ def find_json_files(file_list, keyword, dates):
                     matched_files.append(f)
         except:
             pass
+    # Liste de fichiers avec les informations à extraire
     matched_files = np.array(matched_files).flatten()
     
     return(matched_files)
 
-# Extract active zones
+# Determiner les zones actives selon le bpm
 def open_and_concat_active(data_path,file_list,keyword,birth_year,startDate,endDate):
     
     to_concat = []
     
     if len(file_list) != 0:
-    
+        # Pour tous les fichiers
         for f in file_list:
+            # Lire et extraire le bpm
             df = pd.read_json(data_path+f)
             values = pd.DataFrame.from_records(df['value'].values)
             df.drop(labels='value',axis=1,inplace=True)
@@ -48,18 +53,24 @@ def open_and_concat_active(data_path,file_list,keyword,birth_year,startDate,endD
             df.rename(columns={'value':keyword},inplace=True)
             
             to_concat.append(df)
-            
+        # Mettre tous les fichiers en un dataframe et sélectionner les bonnes dates
         original = pd.concat(to_concat)
         original = original.loc[startDate:endDate-timedelta(seconds=1)]
+        # Ré-échantillonner aux minutes avec une moyenne et écart-type (si pas de donnée, NA)
         result = original.resample('1min').mean()
         result['écart-type'] = original.resample('1min').std(ddof=0)
-
-        fcm = 220 - (datetime.now().year - int(birth_year))
+        
+        # Calculer le HRmax selon Gelbart M. et al. J Sci Med Sport. 2017
+        age = startDate.year - int(birth_year)
+        fcm = 208.7 - 0.73 * age
+        # Zone d'activité
         result['zone'] = None
         result['zone'].loc[result['bpm']<0.5*fcm] = 'sédentaire'
-        result['zone'].loc[(result['bpm']>=0.5*fcm) & (result['bpm']<0.7*fcm)] = 'légère'
-        result['zone'].loc[(result['bpm']>=0.7*fcm) & (result['bpm']<0.85*fcm)] = 'modérée'
-        result['zone'].loc[(result['bpm']>=0.85*fcm)] = 'intense'
+        result['zone'].loc[(result['bpm']>=0.5*fcm) & (result['bpm']<0.64*fcm)] = 'légère'
+        result['zone'].loc[(result['bpm']>=0.64*fcm) & (result['bpm']<0.78*fcm)] = 'modérée'
+        result['zone'].loc[(result['bpm']>=0.78*fcm)] = 'intense'
+        
+        # Mise en page
         result.index.name = 'datetime'
         result.dropna(inplace=True)
     else:
@@ -67,23 +78,26 @@ def open_and_concat_active(data_path,file_list,keyword,birth_year,startDate,endD
 
     return(result.round(2))
  
-# Extract steps    
+# Extraire les pas    
 def open_and_concat_steps(data_path,file_list,keyword,startDate,endDate):
     
     to_concat = []  
     
     if len(file_list) != 0:
-    
+        # Pour tous les fichiers
         for f in file_list :
+            # Lire le fichier
             df = pd.read_json(data_path+f)
             df.set_index('dateTime',inplace=True)
             df.rename(columns={'value':keyword},inplace=True)
             
             to_concat.append(df)
-        
+        # Mettre tous les fichiers en un dataframe et sélectionner les bonnes dates
         result = pd.concat(to_concat)
         result = result.loc[startDate:endDate-timedelta(seconds=1)]
+        # Faire une somme des pas pour chaque minutes
         result = result.resample('1min').sum()
+        # Mise en page
         result.index.name = 'datetime'
         result.dropna(inplace=True)
         
@@ -93,25 +107,27 @@ def open_and_concat_steps(data_path,file_list,keyword,startDate,endDate):
     
     return(result)
 
-# Extract daily stats
+# Extraire les statistiques journalières à partir des données par minute
 def daily_stats(result_min,startDate,endDate,keyword=['steps','heart_rate']):
     
     df = []
 
     if 'steps' in keyword:
-        # Compute steps
+        # Somme des pas par jour
         steps = result_min['steps'].resample('D').sum()
         df.append(steps)
     if 'heart_rate' in keyword:
-        # Compute zones
-        result_min['day'] = result_min.index.normalize()
+        # Nombre de minute dans chaque zone
+        result_min['day'] = result_min.index.normalize() # Associer une journée à chaque mesure
+        # Compter le nombre de fois qu'une zone est identifiée chaque jour
         zone = result_min.groupby(['day','zone'])['bpm'].count().unstack(level=1)
         df.append(zone)
-        # Compute bpm stats
+        # Calculer des statistiques sur le bpm
         bpm_gb = result_min.groupby('day')['bpm'].agg(['max','min','mean','std'])
         bpm_gb.rename(columns = {'max':'bpm_max','min':'bpm_min','mean':'bpm_moyen','std':'bpm_et'},inplace=True)
         df.append(bpm_gb)
     
+    # Mise en page du dataframe avec toute les statistiques journalières
     result_day = pd.concat(df,axis=1)
     day_list = pd.date_range(startDate.normalize(),endDate-timedelta(seconds=1),freq='D')
     for d in day_list:
@@ -130,13 +146,13 @@ def daily_stats(result_min,startDate,endDate,keyword=['steps','heart_rate']):
         end_date_index = end_date_index.delete(len(end_date_index)-1)
         end_date_index = end_date_index.insert(len(end_date_index),endDate)
 
-    
+    # Ajouter une colonne avec la date de début et de fin de chaque jour
     result_day.insert(0,'endDate',end_date_index)
     result_day.insert(0,'startDate',start_date_index) 
         
     return(result_day.reset_index(drop=True))
 
-# Make a liste with all the watches in the directory
+# Lister toutes les montres dans le répertoire
 def list_all_watch(root_path):
     
     watch_list = []
@@ -146,13 +162,15 @@ def list_all_watch(root_path):
     
     return(watch_list)
 
-# Extract what the client wants for one watch
+# Extraction des données
 def export_data(root_path, w, startDate, endDate, birth_year, keywords = ['steps','heart_rate']):  
     keyword = keywords[:]
     try:
+        # Formattage des date
         startDate = pd.to_datetime(startDate,format='%m/%d/%y %H:%M')
         endDate = pd.to_datetime(endDate,format='%m/%d/%y %H:%M')
         
+        # Aller chercher les fichiers avec les données
         data_path = root_path + '/' + w + '/Fitbit/Global Export Data/'  
         all_files_list = os.listdir(data_path)
             
@@ -167,6 +185,8 @@ def export_data(root_path, w, startDate, endDate, birth_year, keywords = ['steps
                 dates = pd.date_range(startDate.normalize()-DateOffset(months=1),endDate.normalize()+DateOffset(months=1),freq='D')
                 dates = dates.strftime('%Y-%m')
                 to_extract_files[k] = find_json_files(all_files_list,k,np.unique(dates))    
+        
+        # Extraire les pas et les zones actives par minute
         concatenated_json = []
         date_list = []
         no_data=True
@@ -185,10 +205,11 @@ def export_data(root_path, w, startDate, endDate, birth_year, keywords = ['steps
                 keyword.remove(k)
             else:
                 no_data=False
-
+        # S'il n'y a pas de données pour les jours entrés, afficher un message d'erreur
         if no_data :
             return(['No data'])
-            
+        
+        # Mise en page
         dateList = np.unique(date_list)
         dateList.sort()
             
@@ -202,7 +223,8 @@ def export_data(root_path, w, startDate, endDate, birth_year, keywords = ['steps
         result_file = result_file.loc[startDate:endDate]
         result_file.dropna(inplace=True,how='all')
         result_file = result_file.round(4)
-            
+        
+        # Sauvegarde des données dans un Excel
         pretty_w = w.replace(' ','_')
         
         excel_file = root_path + '/' + pretty_w +'_'+startDate.strftime('%Y%m%d_%H%M')+'_'+endDate.strftime('%Y%m%d_%H%M')+'.xlsx'
@@ -215,7 +237,7 @@ def export_data(root_path, w, startDate, endDate, birth_year, keywords = ['steps
             result_file.to_excel(writer, sheet_name='Par minute',
                                  index_label='Dates') 
         
-        # Add daily results
+        # Ajouter les résultats journaliers
         result_daily = daily_stats(result_file,startDate,endDate,keyword)
         result_daily = result_daily.round(4)
         excel_writer = pd.ExcelWriter(excel_file,mode='a',
@@ -225,6 +247,7 @@ def export_data(root_path, w, startDate, endDate, birth_year, keywords = ['steps
             result_daily.to_excel(writer, sheet_name='Total',index=False)         
 
         return(['Success'])
+    # S'il y a une erreur, retourner l'erreur
     except Exception as error:
         exc_type, exc_obj, exc_tb = sys.exc_info()
         print(exc_tb.tb_lineno)
