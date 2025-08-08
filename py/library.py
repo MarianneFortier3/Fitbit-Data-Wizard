@@ -108,7 +108,7 @@ def open_and_concat_steps(data_path,file_list,keyword,startDate,endDate):
     return(result)
 
 # Extraire les statistiques journalières à partir des données par minute
-def daily_stats(result_min,startDate,endDate,keyword=['steps','heart_rate']):
+def daily_stats(result_min,startDate,endDate,birth_year,keyword=['steps','heart_rate']):
     
     df = []
 
@@ -129,6 +129,10 @@ def daily_stats(result_min,startDate,endDate,keyword=['steps','heart_rate']):
     
     # Mise en page du dataframe avec toute les statistiques journalières
     result_day = pd.concat(df,axis=1)
+    age = startDate.year - int(birth_year)
+    fcm = 208.7 - 0.73 * age
+    result_day['FCmax'] = fcm
+
     day_list = pd.date_range(startDate.normalize(),endDate-timedelta(seconds=1),freq='D')
     for d in day_list:
         if d not in result_day.index:
@@ -238,7 +242,7 @@ def export_data(root_path, w, startDate, endDate, birth_year, keywords = ['steps
                                  index_label='Dates') 
         
         # Ajouter les résultats journaliers
-        result_daily = daily_stats(result_file,startDate,endDate,keyword)
+        result_daily = daily_stats(result_file,startDate,endDate,birth_year,keyword)
         result_daily = result_daily.round(4)
         excel_writer = pd.ExcelWriter(excel_file,mode='a',
                                       datetime_format='YYYY-MM-DD HH:MM:SS',
